@@ -67,6 +67,7 @@ class MainEpoxyModelDataSource @Inject constructor(
         loadInitialCallback: LoadInitialCallback<Int, ItemViewModel>? = null,
         loadCallback: LoadCallback<Int, ItemViewModel>? = null
     ) {
+
         val nextPage = page + 1
         // index goes out of bound
         if (page > totalPage - 1) {
