@@ -4,7 +4,7 @@
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-    <com.airbnb.epoxy.EpoxyRecyclerView
+    <androidx.recyclerview.widget.RecyclerView
             android:scrollbars="vertical"
             android:id="@+id/content_recycler_view" android:layout_width="match_parent"
             android:layout_height="match_parent"/>

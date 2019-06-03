@@ -1,9 +1,8 @@
 package com.example.mvrxpaged.ui.main
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.paging.DataSource
 import androidx.paging.PageKeyedDataSource
-import com.airbnb.epoxy.EpoxyModel
-import com.example.mvrxpaged.di.FormViewModel
 import com.example.mvrxpaged.di.FragmentScope
 import com.example.mvrxpaged.domain.entity.MainViewType.*
 import com.example.mvrxpaged.domain.interactor.GetBanner
@@ -11,25 +10,24 @@ import com.example.mvrxpaged.domain.interactor.GetCategory
 import com.example.mvrxpaged.domain.interactor.GetDeal
 import com.example.mvrxpaged.domain.interactor.GetMainLayout
 import com.example.mvrxpaged.ui.OnClick
-import com.example.mvrxpaged.ui.main.view.FooterViewModel_
-import com.example.mvrxpaged.ui.main.view.HeaderViewModel_
-import com.example.mvrxpaged.ui.main.view.SeperatorViewModel_
-import com.example.mvrxpaged.ui.main.view.SimpleTextViewModel_
-import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
+import com.example.mvrxpaged.ui.main.view.FooterView
+import com.example.mvrxpaged.ui.main.view.HeaderView
+import com.example.mvrxpaged.ui.main.view.SeperatorView
+import com.example.mvrxpaged.ui.main.view.SimpleTextView
 import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.random.Random
 
 @FragmentScope
 class MainEpoxyModelDataSource @Inject constructor(
-    @FormViewModel private val viewModelProvider: Provider<MainViewModel>,
+    private val viewModelProvider: Provider<MainViewModel>,
     private val args: MainArgs,
     private val getBanner: GetBanner,
     private val getCategory: GetCategory,
     private val getDeal: GetDeal,
-    private val getMainLayout: GetMainLayout
-) : PageKeyedDataSource<Int, EpoxyModel<*>>() {
+    private val getMainLayout: GetMainLayout,
+    private val lifecycleOwner: LifecycleOwner
+) : PageKeyedDataSource<Int, ItemViewModel>() {
     private val layout = getMainLayout()
     private val totalItemCount = layout.map { viewType ->
         when (viewType) {
@@ -38,127 +36,131 @@ class MainEpoxyModelDataSource @Inject constructor(
             is Category -> 1 + 1 + 1 + 1 // header + content + footer + separator
         }
     }.sum()
+    private val totalPage = layout.size
 
     private val viewModel: MainViewModel by lazy { viewModelProvider.get() }
-    private val compositeDisposable: CompositeDisposable by lazy { viewModel.disposable }
 
     @FragmentScope
     class Factory @Inject constructor(
         private val provider: Provider<MainEpoxyModelDataSource>
-    ) : DataSource.Factory<Int, EpoxyModel<*>>() {
-        override fun create(): DataSource<Int, EpoxyModel<*>> {
+    ) : DataSource.Factory<Int, ItemViewModel>() {
+        override fun create(): DataSource<Int, ItemViewModel> {
             return provider.get()
         }
     }
 
-    override fun loadInitial(params: LoadInitialParams<Int>, callback: LoadInitialCallback<Int, EpoxyModel<*>>) {
+    override fun loadInitial(params: LoadInitialParams<Int>, callback: LoadInitialCallback<Int, ItemViewModel>) {
         load(page = 0, loadInitialCallback = callback)
     }
 
-    override fun loadAfter(params: LoadParams<Int>, callback: LoadCallback<Int, EpoxyModel<*>>) {
+    override fun loadAfter(params: LoadParams<Int>, callback: LoadCallback<Int, ItemViewModel>) {
         load(page = params.key, loadCallback = callback)
     }
 
-    override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<Int, EpoxyModel<*>>) {
+    override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<Int, ItemViewModel>) {
         // data source does not change
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     private fun load(
         page: Int,
-        loadInitialCallback: LoadInitialCallback<Int, EpoxyModel<*>>? = null,
-        loadCallback: LoadCallback<Int, EpoxyModel<*>>? = null
+        loadInitialCallback: LoadInitialCallback<Int, ItemViewModel>? = null,
+        loadCallback: LoadCallback<Int, ItemViewModel>? = null
     ) {
+        val nextPage = page + 1
         // index goes out of bound
-        if (page > totalItemCount - 1) {
+        if (page > totalPage - 1) {
             // for infinity list -> load more random category block
             if (args.infinity) {
                 val code = Random.nextInt() % 1000
-                loadCategory(code.toString())
+                val models = loadCategory(code.toString())
+                loadCallback?.onResult(models, nextPage)
             } else {
                 loadCallback?.onResult(emptyList(), null)
                 loadInitialCallback?.onResult(emptyList(), 0, 0, null, null)
             }
-        }
-        val viewType = layout[page]
-        val modelListObservable = when (viewType) {
-            is Banner -> loadBanner(viewType.name)
-            is Deal -> loadDeal(viewType.code)
-            is Category -> loadCategory(viewType.code)
-        }
+        } else {
+            val viewType = layout[page]
+            val models = when (viewType) {
+                is Banner -> loadBanner(viewType.name)
+                is Deal -> loadDeal(viewType.code)
+                is Category -> loadCategory(viewType.code)
+            }
 
-        modelListObservable.subscribe { data ->
-            val nextPage = page + 1
+
             if (args.infinity) {
-                loadInitialCallback?.onResult(data, null, nextPage)
+                loadInitialCallback?.onResult(models, null, nextPage)
             } else {
-                loadInitialCallback?.onResult(data, 0, totalItemCount, null, nextPage)
+                loadInitialCallback?.onResult(models, 0, totalItemCount, null, nextPage)
 
             }
-            loadCallback?.onResult(data, nextPage)
-        }.let(compositeDisposable::add)
+            loadCallback?.onResult(models, nextPage)
+        }
     }
 
-    private fun loadBanner(name: String): Observable<List<EpoxyModel<*>>> {
-        return getBanner(name).map { bannerData ->
-            listOf<EpoxyModel<*>>(
-                SimpleTextViewModel_()
-                    .id("banner ${bannerData.value}")
-                    .content(bannerData.value)
-                    .onClick(OnClick {
+    private fun loadBanner(name: String): List<ItemViewModel> {
+        return getBanner(name).let { bannerData ->
+            listOf(
+                SimpleTextView.Model(
+                    id = "banner ${bannerData.value}",
+                    content = bannerData.value,
+                    onClick = OnClick {
                         viewModel.onBannerClick(bannerData)
                     }),
-                SeperatorViewModel_()
-                    .id("seperator banner")
-            )
-
-        }
-    }
-
-    private fun loadDeal(code: String): Observable<List<EpoxyModel<*>>> {
-        return getDeal(code).map {
-            listOf<EpoxyModel<*>>(
-                HeaderViewModel_()
-                    .id("header ${it.value}")
-                    .content(it.value)
-                    .onClick(OnClick {
-                        viewModel.onDealHeaderClick(it)
-                    }),
-                SimpleTextViewModel_()
-                    .id("text ${it.value}")
-                    .content(it.value)
-                    .onClick(OnClick {
-                        viewModel.onDealClick(it)
-                    }),
-                SeperatorViewModel_()
-                    .id("Seperator ${it.value}")
+                SeperatorView.Model(
+                    id = "seperator banner"
+                )
             )
         }
     }
 
-    private fun loadCategory(code: String): Observable<List<EpoxyModel<*>>> {
-        return getCategory(code).map {
-            listOf<EpoxyModel<*>>(
-                HeaderViewModel_()
-                    .id("header ${it.value}")
-                    .content(it.value)
-                    .onClick(OnClick {
-                        viewModel.onCategoryHeaderClick(it)
+    private fun loadDeal(code: String): List<ItemViewModel> {
+        return getDeal(code).let { dealData ->
+            listOf(
+                HeaderView.Model(
+                    id = "header ${dealData.value}",
+                    content = dealData.value,
+                    onClick = OnClick {
+                        viewModel.onDealHeaderClick(dealData)
+                    }
+                ),
+                SimpleTextView.Model(
+                    id = "text ${dealData.value}",
+                    content = dealData.value,
+                    onClick = OnClick {
+                        viewModel.onDealClick(dealData)
                     }),
-                SimpleTextViewModel_()
-                    .id("text ${it.value}")
-                    .content(it.value)
-                    .onClick(OnClick {
-                        viewModel.onCategoryClick(it)
+                SeperatorView.Model(
+                    id = "Seperator ${dealData.value}"
+                )
+            )
+        }
+    }
+
+    private fun loadCategory(code: String): List<ItemViewModel> {
+        return getCategory(code).let { categoryData ->
+            listOf(
+                HeaderView.Model(
+                    id = "header ${categoryData.value}",
+                    content = categoryData.value,
+                    onClick = OnClick {
+                        viewModel.onCategoryHeaderClick(categoryData)
                     }),
-                FooterViewModel_()
-                    .id("Footer ${it.value}")
-                    .content(it.value)
-                    .onClick(OnClick {
-                        viewModel.onCategoryFooterClick(it)
+                SimpleTextView.Model(
+                    id = "text ${categoryData.value}",
+                    content = categoryData.value,
+                    onClick = OnClick {
+                        viewModel.onCategoryClick(categoryData)
                     }),
-                SeperatorViewModel_()
-                    .id("Seperator ${it.value}")
+                FooterView.Model(
+                    id = ("Footer ${categoryData.value}"),
+                    content = (categoryData.value),
+                    onClick = OnClick {
+                        viewModel.onCategoryFooterClick(categoryData)
+                    }),
+                SeperatorView.Model(
+                    id = "Seperator ${categoryData.value}"
+                )
             )
         }
     }

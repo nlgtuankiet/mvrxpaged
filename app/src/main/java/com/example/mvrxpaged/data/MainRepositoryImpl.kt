@@ -6,10 +6,6 @@ import com.example.mvrxpaged.domain.entity.CategoryData
 import com.example.mvrxpaged.domain.entity.DealData
 import com.example.mvrxpaged.domain.entity.MainViewType
 import com.example.mvrxpaged.domain.repository.MainRepository
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -38,32 +34,23 @@ class MainRepositoryImpl @Inject constructor() : MainRepository {
         MainViewType.Category("3")
     )
 
-
-    override fun getBanner(name: String): Observable<BannerData> {
-        return Observable
-            .just(BannerData("banner name:  $name"))
-            .delay(1, TimeUnit.SECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
-
     override fun getMainScreenLayer(): List<MainViewType> {
         return if (Random.nextBoolean()) layerA else layerB
     }
 
-    override fun getCategory(code: String): Observable<CategoryData> {
-        return Observable
-            .just(CategoryData("category $code"))
-            .delay(1, TimeUnit.SECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+    override fun getBanner(name: String): BannerData {
+        Thread.sleep(1000)
+        return BannerData("banner name:  $name")
     }
 
-    override fun getDeal(code: String): Observable<DealData> {
-        return Observable.just(DealData("deal $code"))
-            .delay(1, TimeUnit.SECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+    override fun getCategory(code: String): CategoryData {
+        Thread.sleep(1000)
+        return CategoryData("category $code")
+    }
+
+    override fun getDeal(code: String): DealData {
+        Thread.sleep(1000)
+        return DealData("deal $code")
     }
 
 }

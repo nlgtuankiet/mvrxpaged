@@ -1,6 +1,7 @@
 package com.example.mvrxpaged.ui.main
 
 import android.os.Bundle
+import androidx.lifecycle.LifecycleOwner
 import com.example.mvrxpaged.di.FormViewModel
 import com.example.mvrxpaged.di.FragmentScope
 import dagger.Module
@@ -18,7 +19,6 @@ interface MainFragmentModule {
     object Provision {
         @Provides
         @FormViewModel
-        @FragmentScope
         @JvmStatic
         fun viewModelHolder(fragment: MainFragment): MainViewModel = fragment.viewModel
 
@@ -26,5 +26,9 @@ interface MainFragmentModule {
         @FragmentScope
         @JvmStatic
         fun args(fragment: MainFragment): MainArgs = MainArgs.fromBundle(fragment.arguments ?: Bundle.EMPTY)
+
+        @Provides
+        @JvmStatic
+        fun lifecyclerOwner(fragment: MainFragment): LifecycleOwner = fragment.viewLifecycleOwner
     }
 }
