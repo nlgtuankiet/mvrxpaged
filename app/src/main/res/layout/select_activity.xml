@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <CheckBox
             android:layout_marginLeft="24dp"
             android:padding="24dp"
             android:text="Infinity List"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:id="@+id/infinity_check_box"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/infinity_check_box"/>
     <CheckBox
             android:layout_marginLeft="24dp"
             android:padding="24dp"
             android:text="Placeholder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:id="@+id/placeholder_checkbox"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/placeholder_checkbox"/>
     <Button
             android:padding="24dp"
             android:text="go go go!"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:id="@+id/go_button"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/go_button"/>
 </LinearLayout>

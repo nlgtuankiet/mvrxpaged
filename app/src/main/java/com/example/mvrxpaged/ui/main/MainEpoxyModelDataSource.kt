@@ -4,16 +4,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.paging.DataSource
 import androidx.paging.PageKeyedDataSource
 import com.example.mvrxpaged.di.FragmentScope
+import com.example.mvrxpaged.domain.entity.MainViewType
 import com.example.mvrxpaged.domain.entity.MainViewType.*
 import com.example.mvrxpaged.domain.interactor.GetBanner
 import com.example.mvrxpaged.domain.interactor.GetCategory
 import com.example.mvrxpaged.domain.interactor.GetDeal
 import com.example.mvrxpaged.domain.interactor.GetMainLayout
 import com.example.mvrxpaged.ui.OnClick
-import com.example.mvrxpaged.ui.main.view.FooterView
-import com.example.mvrxpaged.ui.main.view.HeaderView
-import com.example.mvrxpaged.ui.main.view.SeperatorView
-import com.example.mvrxpaged.ui.main.view.SimpleTextView
+import com.example.mvrxpaged.ui.main.view.*
 import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.random.Random
@@ -25,18 +23,20 @@ class MainEpoxyModelDataSource @Inject constructor(
     private val getBanner: GetBanner,
     private val getCategory: GetCategory,
     private val getDeal: GetDeal,
-    private val getMainLayout: GetMainLayout,
-    private val lifecycleOwner: LifecycleOwner
+    private val getMainLayout: GetMainLayout
 ) : PageKeyedDataSource<Int, ItemViewModel>() {
-    private val layout = getMainLayout()
-    private val totalItemCount = layout.map { viewType ->
-        when (viewType) {
-            is Banner -> 1 + 1 // banner + separator
-            is Deal -> 1 + 1 + 1 // header + content + separator
-            is Category -> 1 + 1 + 1 + 1 // header + content + footer + separator
-        }
-    }.sum()
-    private val totalPage = layout.size
+    private lateinit var layout: List<MainViewType>
+    private val totalItemCount: Int by lazy {
+        layout.map { viewType ->
+            when (viewType) {
+                is Banner -> 1 + 1 // banner + separator
+                is Deal -> 1 + 1 // header + separator
+                is Category -> 1 + 1 // header + separator
+            }
+        }.sum()
+    }
+
+    private val totalPage: Int by lazy { layout.size }
 
     private val viewModel: MainViewModel by lazy { viewModelProvider.get() }
 
@@ -50,6 +50,7 @@ class MainEpoxyModelDataSource @Inject constructor(
     }
 
     override fun loadInitial(params: LoadInitialParams<Int>, callback: LoadInitialCallback<Int, ItemViewModel>) {
+        layout = getMainLayout()
         load(page = 0, loadInitialCallback = callback)
     }
 
@@ -81,8 +82,7 @@ class MainEpoxyModelDataSource @Inject constructor(
                 loadInitialCallback?.onResult(emptyList(), 0, 0, null, null)
             }
         } else {
-            val viewType = layout[page]
-            val models = when (viewType) {
+            val models = when (val viewType = layout[page]) {
                 is Banner -> loadBanner(viewType.name)
                 is Deal -> loadDeal(viewType.code)
                 is Category -> loadCategory(viewType.code)
@@ -102,14 +102,14 @@ class MainEpoxyModelDataSource @Inject constructor(
     private fun loadBanner(name: String): List<ItemViewModel> {
         return getBanner(name).let { bannerData ->
             listOf(
-                SimpleTextView.Model(
+                BannerView.Model(
                     id = "banner ${bannerData.value}",
                     content = bannerData.value,
                     onClick = OnClick {
                         viewModel.onBannerClick(bannerData)
                     }),
-                SeperatorView.Model(
-                    id = "seperator banner"
+                SeparatorView.Model(
+                    id = "separator ${bannerData.value}"
                 )
             )
         }
@@ -118,20 +118,14 @@ class MainEpoxyModelDataSource @Inject constructor(
     private fun loadDeal(code: String): List<ItemViewModel> {
         return getDeal(code).let { dealData ->
             listOf(
-                HeaderView.Model(
+                DealView.Model(
                     id = "header ${dealData.value}",
                     content = dealData.value,
                     onClick = OnClick {
-                        viewModel.onDealHeaderClick(dealData)
+                        viewModel.onDealClick(dealData)
                     }
                 ),
-                SimpleTextView.Model(
-                    id = "text ${dealData.value}",
-                    content = dealData.value,
-                    onClick = OnClick {
-                        viewModel.onDealClick(dealData)
-                    }),
-                SeperatorView.Model(
+                SeparatorView.Model(
                     id = "Seperator ${dealData.value}"
                 )
             )
@@ -141,26 +135,14 @@ class MainEpoxyModelDataSource @Inject constructor(
     private fun loadCategory(code: String): List<ItemViewModel> {
         return getCategory(code).let { categoryData ->
             listOf(
-                HeaderView.Model(
-                    id = "header ${categoryData.value}",
-                    content = categoryData.value,
-                    onClick = OnClick {
-                        viewModel.onCategoryHeaderClick(categoryData)
-                    }),
-                SimpleTextView.Model(
-                    id = "text ${categoryData.value}",
+                CategoryView.Model(
+                    id = "category ${categoryData.value}",
                     content = categoryData.value,
                     onClick = OnClick {
                         viewModel.onCategoryClick(categoryData)
                     }),
-                FooterView.Model(
-                    id = ("Footer ${categoryData.value}"),
-                    content = (categoryData.value),
-                    onClick = OnClick {
-                        viewModel.onCategoryFooterClick(categoryData)
-                    }),
-                SeperatorView.Model(
-                    id = "Seperator ${categoryData.value}"
+                SeparatorView.Model(
+                    id = "separator ${categoryData.value}"
                 )
             )
         }

@@ -26,9 +26,5 @@ interface MainFragmentModule {
         @FragmentScope
         @JvmStatic
         fun args(fragment: MainFragment): MainArgs = MainArgs.fromBundle(fragment.arguments ?: Bundle.EMPTY)
-
-        @Provides
-        @JvmStatic
-        fun lifecyclerOwner(fragment: MainFragment): LifecycleOwner = fragment.viewLifecycleOwner
     }
 }

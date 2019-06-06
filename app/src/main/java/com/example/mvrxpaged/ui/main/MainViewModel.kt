@@ -30,20 +30,8 @@ class MainViewModel @Inject constructor(
         println("open deal screen for: ${dealData.value}")
     }
 
-    fun onDealHeaderClick(data: DealData) {
-        messageEvent.value = "onDealHeaderClick $data"
-    }
-
     fun onCategoryClick(data: CategoryData) {
         messageEvent.value = "onCategoryClick $data"
-    }
-
-    fun onCategoryHeaderClick(data: CategoryData) {
-        messageEvent.value = "onCategoryHeaderClick $data"
-    }
-
-    fun onCategoryFooterClick(data: CategoryData) {
-        messageEvent.value = "onCategoryFooterClick $data"
     }
 
     fun onBannerClick(data: BannerData) {

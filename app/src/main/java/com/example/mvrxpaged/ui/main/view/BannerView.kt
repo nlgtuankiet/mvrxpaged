@@ -4,11 +4,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.airbnb.epoxy.ModelView
 import com.example.mvrxpaged.R
+import com.example.mvrxpaged.R2
 import com.example.mvrxpaged.ui.OnClick
 import com.example.mvrxpaged.ui.main.ItemViewModel
 
-class HeaderView @JvmOverloads constructor(
+class BannerView @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null
 ) : LinearLayout(context, attributeSet) {
@@ -20,11 +22,11 @@ class HeaderView @JvmOverloads constructor(
     }
 
     fun setContent(content: String) {
-        println("HeaderView setContent: $content")
-        contentTextView.text = "-- HEADER $content --".toUpperCase()
+        println("SimpleTextView setContent: $content")
+        contentTextView.text = content
     }
 
     fun setOnClick(onClick: OnClick? = null) {
-        setOnClickListener(onClick)
+        contentTextView.setOnClickListener(onClick)
     }
 }

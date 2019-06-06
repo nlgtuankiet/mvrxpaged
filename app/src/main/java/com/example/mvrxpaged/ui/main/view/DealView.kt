@@ -10,24 +10,25 @@ import com.example.mvrxpaged.R2
 import com.example.mvrxpaged.ui.OnClick
 import com.example.mvrxpaged.ui.main.ItemViewModel
 
-@ModelView(defaultLayout = R2.layout.simple_text)
-class SimpleTextView @JvmOverloads constructor(
+class DealView @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null
 ) : LinearLayout(context, attributeSet) {
 
     data class Model(override val id: String, val content: String, val onClick: OnClick) : ItemViewModel
 
-    private val contentTextView: TextView by lazy {
-        findViewById<TextView>(R.id.content)
+    private val contentTextView: TextView by lazy { findViewById<TextView>(R.id.content) }
+    private val headerTextView: TextView by lazy { findViewById<TextView>(R.id.header) }
+
+    fun setContent(value: String) {
+        contentTextView.text = value
     }
 
-    fun setContent(content: String) {
-        println("SimpleTextView setContent: $content")
-        contentTextView.text = content
+    fun setHeader(value: String) {
+        headerTextView.text = "-- DEAL HEADER OF $value ---".toUpperCase()
     }
 
     fun setOnClick(onClick: OnClick? = null) {
-        setOnClickListener(onClick)
+        contentTextView.setOnClickListener(onClick)
     }
 }

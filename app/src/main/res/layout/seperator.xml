@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<com.example.mvrxpaged.ui.main.view.SeperatorView xmlns:android="http://schemas.android.com/apk/res/android"
-                                                  android:background="@color/colorPrimary"
-                                                  android:orientation="vertical"
-                                                  android:layout_width="match_parent"
-                                                  android:layout_height="16dp">
-
-</com.example.mvrxpaged.ui.main.view.SeperatorView>

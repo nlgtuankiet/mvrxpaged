@@ -34,6 +34,7 @@ class MainRepositoryImpl @Inject constructor() : MainRepository {
         MainViewType.Category("3")
     )
 
+    // obtain the layer from A/B testing
     override fun getMainScreenLayer(): List<MainViewType> {
         return if (Random.nextBoolean()) layerA else layerB
     }
